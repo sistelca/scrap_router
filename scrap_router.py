@@ -5,11 +5,14 @@ import re
 import time
 from datetime import datetime
 
-#import os
+import os
 #import shutil
 
-#if not 'conex2tplink.txt' in os.listdir('/var/www/html/'):
+if not 'conex2tplink.txt' in os.listdir('/var/www/html/'):
 #    shutil.copyfile('conex2tplink.txt', '/var/www/html/conex2tplink.txt')
+    with open('/var/www/html/conex2tplink.txt', 'w') as resulta2:
+        resulta2.write('timestamp'+'\t'+'N_conx'+'\t'+'b_reci'+'\t'+'b_env'+'\n')
+
 
 class TippiLink:
     def __init__(self, username, password, host="192.168.0.1"):
@@ -30,12 +33,22 @@ class TippiLink:
         auth_b64_str = str(auth_b64_bytes, 'utf-8')
         auth_str = quote('Basic {}'.format(auth_b64_str))
         return auth_str
+        
+    def restart_router(self):
+        params = (('Reboot', 'Reboot'),)
+        try:
+            res = requests.get('http://%s/userRpm/SysRebootRpm.htm' % self._host,
+                                headers=self._get_headers(), params=params)
+        except:
+            pass
 
 
 tl = TippiLink("luis", "AmE3024OT1", "192.168.66.32")
 ini = 'wlanHostPara = new Array('
+ini1 = 'statistList = new Array('
 fin = ');'
 
+estado = 0
 i = 0
 while True:
     try:
@@ -45,10 +58,20 @@ while True:
         timestamp = datetime.timestamp(now)
 
         lista = str(content)[str(content).index(ini)+len(ini):str(content).index(fin)].replace('\\n', '').split(',')
-
+        response = requests.get('http://%s/userRpm/%s.htm' % (tl._host, 'StatusRpm.htm'), headers=tl._get_headers())
+        content = response.content
+        texto = str(content)[str(content).index(ini1)+len(ini1)+2:]
+        statistList = texto[:texto.index(fin)].split(',')
+	
         #print(timestamp, lista[5])
         with open('/var/www/html/conex2tplink.txt', 'a') as resulta2:
-            resulta2.write(str(timestamp)+'\t'+lista[5]+'\n')
+            resulta2.write(str(timestamp)+'\t'+lista[5]+'\t'+statistList[0]+'\t'+statistList[1]+'\n')
+            
+        if int(lista[5]) < 10 and estado ==0 :
+            estado = 1
+            tl.restart_router()
+        elif int(lista[5]) > 10:
+            estado = 0
 
     except:
         pass
