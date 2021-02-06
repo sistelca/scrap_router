@@ -1,7 +1,6 @@
 import requests
 from urllib.parse import quote
 import base64
-import re
 import time
 from datetime import datetime
 
