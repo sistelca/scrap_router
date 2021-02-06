@@ -1,10 +1,10 @@
 import mysql.connector
 from tplink import TippiLink
 
-tl = TippiLink("luis", "AmE3024OT1", "192.168.66.32")
+tl = TippiLink("aaaaa", "xxxxxx", "111.222.333.444")
 
 
-cnx = mysql.connector.connect(user='root', password='prometea2008', host='127.0.0.1', database='clientes')
+cnx = mysql.connector.connect(user='abc', password='laumex', host='111.222.333.444', database='mirsig')
 cursor = cnx.cursor()
 
 lista = tl.get_all_macs()
