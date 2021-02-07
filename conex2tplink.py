@@ -1,10 +1,19 @@
 import mysql.connector
 from tplink import TippiLink
+from dotenv import load_dotenv
+import os
 
-tl = TippiLink("aaaaa", "xxxxxx", "111.222.333.444")
+load_dotenv()
+tplink_id = os.getenv("TPLINK_ID")
+tplink_pw = os.getenv("TPLINK_SECRET")
+
+tl = TippiLink(tplink_id, tplink_pw, "192.168.66.32")
+
+sql_id = os.getenv("SQL_ID")
+sql_pw = os.getenv("SQL_PW")
 
 
-cnx = mysql.connector.connect(user='abc', password='laumex', host='111.222.333.444', database='mirsig')
+cnx = mysql.connector.connect(user=sql_id, password=sql_pw, host='127.0.0.1', database='clientes')
 cursor = cnx.cursor()
 
 lista = tl.get_all_macs()
