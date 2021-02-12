@@ -2,12 +2,20 @@ import mysql.connector
 from tplink import TippiLink
 from dotenv import load_dotenv
 import os
+import sys
 
 load_dotenv()
 tplink_id = os.getenv("TPLINK_ID")
 tplink_pw = os.getenv("TPLINK_SECRET")
+tplink_hs = sys.argv[1]
 
-tl = TippiLink(tplink_id, tplink_pw, "192.168.66.32")
+if not '192.168.66.' in tplink_hs:
+    print('error')
+    sys.exit(1)
+
+print('host: ', tplink_hs)
+
+tl = TippiLink(tplink_id, tplink_pw, tplink_hs)
 
 sql_id = os.getenv("SQL_ID")
 sql_pw = os.getenv("SQL_PW")
@@ -20,13 +28,13 @@ lista = tl.get_all_macs()
  
 for l in lista:
     query = ("select datos_per.coduser, datos_per.nom_apell, datos_red.dir_mac from datos_red, datos_per "
-             "where datos_per.coduser=datos_red.coduser and datos_red.dir_mac='"+l+"'")
+             "where datos_per.coduser=datos_red.coduser and datos_red.dir_mac='"+l[0]+"'")
 
     cursor.execute(query)
     
 
-    for (coduser, nom_apell, l) in cursor:
-        print("{}, {} mac {}".format(coduser, nom_apell, l))
+    for (coduser, nom_apell, dir_mac) in cursor:
+        print("{}, {} mac {} rec {} env {}".format(coduser, nom_apell, dir_mac, l[2], l[3]))
 
 cursor.close()
 cnx.close()

@@ -4,7 +4,6 @@ import base64
 import time
 from datetime import datetime
 
-# para convertir en modulo __init__.py
 class TippiLink:
     def __init__(self, username, password, host="192.168.0.1"):
         self._username = username
@@ -36,33 +35,37 @@ class TippiLink:
             ini = 'hostList = new Array('
             fin = ');'
 
-            texto = str(content)[str(content).index(ini)+len(ini)+2:]
-            arrTx = texto[:texto.index(fin)].split("\"")
-            arr = [l for l in arrTx if len(l.split('-')) == 6]
-
-            return arr
-        
+            texto = str(content)[str(content).index(ini)+len(ini)+2:].replace('\\n', '').replace(', 0,0 ', '')
+            texto = texto[:texto.index(fin)].replace('-', ':').lower()
+                        
+            lista = [l.replace("\"", "").replace(" ", "") for l in texto.split(',')]
+            nueva_lista = [lista[i:i+4] for i in range(0, len(lista), 4) if lista[i+1] in ['0', '1', '8']]
+                                                
+            return nueva_lista
+                                                                    
         except:
-            return "Error"
+            pass   # return "Error"
     
     def get_all_macs(self):
         page = '1'
         macs = []
+        mac_stat = []
 
         while True:
-            arr = self._get_mac_from_page("WlanStationRpm.htm?Page="+page)
+            arr_in = self._get_mac_from_page("WlanStationRpm.htm?Page="+page)
+            arr = [l[0] for l in arr_in]
             page = str(int(page) + 1)
 
             if set(arr).issubset(set(macs)):
                 break
             else:
                 macs.extend(arr)
+                mac_stat.extend(arr_in)
 
-        mac_address = list(set(macs))
+        mac_stat.sort(key=lambda x:int(x[2]), reverse=True)
+        macs = [m[0] for m in mac_stat]
 
-        mac_address = [mac.replace('-', ':').lower() for mac in mac_address]
-
-        return mac_address
+        return mac_stat   #macs
     
     def estadisticas(self):
         now = datetime.now()
@@ -89,7 +92,7 @@ class TippiLink:
             
             return [timestamp, nconx, b_rec, b_env]
         except:
-            return "Error"
+            pass   # return "Error"
         
     def restart_router(self):
         params = (('Reboot', 'Reboot'),)
