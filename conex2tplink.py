@@ -34,7 +34,7 @@ for l in lista:
     
 
     for (coduser, nom_apell, fech_ven, dir_mac) in cursor:
-        print("{} \t {} \t {} \t mac {} \t rec {} \t env {}".format(coduser, nom_apell, fech_ven, dir_mac, l[2], l[3]))
+        print("{} \t {} \t \t {} \t mac {} \t rec {} \t env {}".format(coduser, nom_apell, fech_ven, dir_mac, l[2], l[3]))
 
 cursor.close()
 cnx.close()
