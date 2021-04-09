@@ -27,14 +27,14 @@ cursor = cnx.cursor()
 lista = tl.get_all_macs()
  
 for l in lista:
-    query = ("select datos_per.coduser, datos_per.nom_apell, datos_red.dir_mac from datos_red, datos_per "
+    query = ("select datos_per.coduser, datos_per.nom_apell, datos_per.fech_ven, datos_red.dir_mac from datos_red, datos_per "
              "where datos_per.coduser=datos_red.coduser and datos_red.dir_mac='"+l[0]+"'")
 
     cursor.execute(query)
     
 
-    for (coduser, nom_apell, dir_mac) in cursor:
-        print("{}, {} mac {} rec {} env {}".format(coduser, nom_apell, dir_mac, l[2], l[3]))
+    for (coduser, nom_apell, fech_ven, dir_mac) in cursor:
+        print("{} \t {} \t \t {} \t mac {} \t rec {} \t env {}".format(coduser, nom_apell, fech_ven, dir_mac, l[2], l[3]))
 
 cursor.close()
 cnx.close()
