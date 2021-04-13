@@ -34,3 +34,5 @@ for query in querys:
     ok = conexion(query)
     print(ok)
     
+
+print("xd")
