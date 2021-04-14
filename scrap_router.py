@@ -16,14 +16,15 @@ import os
 load_dotenv()
 tplink_id = os.getenv("TPLINK_ID")
 tplink_pw = os.getenv("TPLINK_SECRET")
+sensibilidad = 3 # tolerancia de elementos recibidos en parada
 
 tl = TippiLink(tplink_id, tplink_pw, "192.168.66.32")
 ini = 'wlanHostPara = new Array('
 ini1 = 'statistList = new Array('
 fin = ');'
 
-estado = 0
-i = 0
+#i = 0
+status = []
 while True:
     try:
 
@@ -32,11 +33,13 @@ while True:
         with open('/var/www/html/conex2tplink.txt', 'a') as resulta2:
             resulta2.write(str(lista[0])+'\t'+lista[1]+'\t'+lista[2]+'\t'+lista[3]+'\n')
             
-        if int(lista[1]) < 10 and estado ==0 :
-            estado = 1
+        status.append(int(lista[2]))
+
+        if len(status) > sensibilidad:
+            status.pop(0)
+
+        if len(status) == sensibilidad and status[-1] == sum(status)/len(status):
             tl.restart_router()
-        elif int(lista[1]) > 10:
-            estado = 0
 
     except:
         pass
