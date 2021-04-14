@@ -32,15 +32,11 @@ querys = ['update Actzl set pasar = 1 where pasar = 2',
           'select * from Actzl where pasar = 1',
           'update Actzl set pasar = 0 where pasar = 1']
 
-claves = ''
-    
 okis = []
-for query in querys:
+for query in querys[-1]:
     okis.append(conexion(query))
     
 field_names = [i[0] for i in okis[1][1]]
-
-print(field_names)
 
 pila = []
 for ok in okis[1][0]:
@@ -55,4 +51,6 @@ for ok in okis[1][0]:
 
 with open('result.json', 'w') as fp:
     json.dump(pila, fp)
+
+ok = conexion(querys[-1])
 print('listo')
