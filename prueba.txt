@@ -1,1 +1,21 @@
-{"checkfil": "a4e180fceee0edf28dff0e13e495fa2dcb191159"}
+total 156
+-rw-rw-r--. 1 luis luis  1290 jun  7 05:57 actlz.py
+-rw-rw-r--. 1 luis luis  5181 jun  7 06:06 actrmt.ipynb
+-rw-rw-r--. 1 luis luis  1332 may 13 04:25 conex2bfl.py
+-rw-rw-r--. 1 luis luis  1053 may  8 04:07 conex2tplink.py
+-rw-rw-r--. 1 luis luis  3690 may 14 05:36 dd-wrt.ipynb
+-rw-rw-r--. 1 luis luis  4256 may  8 04:07 dd-wrt-selenium.ipynb
+-rw-rw-r--. 1 luis luis   891 may  8 04:07 diagnos_canagua.pl
+-rw-rw-r--. 1 luis luis  7984 may 19 05:40 leegitquery.ipynb
+-rw-rw-r--. 1 luis luis  3348 may  8 04:07 leegitquery.py
+-rw-rw-r--. 1 luis luis  1741 may  8 04:07 printNumConex.py
+-rw-rw-r--. 1 luis luis     0 jun  7 06:06 prueba.txt
+-rw-rw-r--. 1 luis luis   185 may  8 04:07 README.md
+-rw-rw-r--. 1 luis luis  2818 may  8 04:07 readPrintScreen.py
+-rw-rw-r--. 1 luis luis  7191 may  8 04:07 result.json
+-rw-rw-r--. 1 luis luis 62524 may 13 04:25 router_graph1.ipynb
+-rw-rw-r--. 1 luis luis  7503 may 13 04:25 scrap_router.ipynb
+-rw-rw-r--. 1 luis luis  1297 may  8 04:07 scrap_router.py
+drwxrwxr-x. 3 luis luis  4096 mar 12 17:50 tplink
+-rw-rw-r--. 1 luis luis  3714 may  8 04:07 tplink_class.py
+-rw-rw-r--. 1 luis luis  1345 may  8 04:07 updateClientes.py
