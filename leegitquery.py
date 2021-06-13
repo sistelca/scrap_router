@@ -1,22 +1,12 @@
-# coding: utf-8
-
-
 import requests
 import base64
 import json
-import re
 import hashlib
 
 import mysql.connector
 from dotenv import load_dotenv
 import os
 
-
-def campos(fields):
-    cad = ''
-    for x in fields.keys():
-        cad += x + ' = ' + fields[x] + ', '
-    return cad[:-2]
 
 def leeactzl(user, repo_name, path_to_file):
     json_url ='https://api.github.com/repos/{}/{}/contents/{}'.format(user, repo_name,
@@ -29,86 +19,137 @@ def leeactzl(user, repo_name, path_to_file):
         content = base64.b64decode(jsonResponse['content'])
         #convert the byte stream to string
         jsonString = content.decode('utf-8')
-        return json.loads(jsonString)
+        try:
+            return json.loads(jsonString)
+        except:
+            return jsonString 
  
     else:
         return 'Content was not found.'
     
-def calcquerys(finalJson):
+def calcquerys(dt_query):
     
-    querys = []
-    for registro in finalJson:
-        if registro['firma'] == hashlib.sha1(registro["instruccion"].encode('utf-8')).hexdigest():
-            dt_query = json.loads(registro['instruccion'])
-            
-            quetmp = []
-            for y in dt_query.keys():
-                if dt_query[y]['op'] == 'UPDATE':
-                    query  = str(dt_query[y]['op']) + ' ' + y + ' SET ' + campos(dt_query[y]['fields'])
-                    query += ' WHERE '
-                elif dt_query[y]['op'] == 'INSERT INTO':
-                    query  = query = str(dt_query[y]['op']) + ' ' + y
-                    query += ' ' + str(tuple(list(dt_query[y]['fields'].keys())))+ ' VALUES '
-                    query +=  str(tuple(list(dt_query[y]['fields'].values())))
-                    query  = query.replace("'", "")
-                    filtro_update = 'coduser = ' + dt_query[y]['fields']['coduser']
-                quetmp.append(query)
-                
-            quetmp = [q + filtro_update if 'UPDATE' in q else q for q in quetmp]
-
-            querys.extend(quetmp)
-
-            #break # <--== Pilas quitar en produccion
-
+    instrucions =  {'update': ['set', 'where'],
+                 'insert into': ['(', ') values'],
+                 'delete from': ['where', 'todo']
+               } 
     
-    patron = re.compile('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+    regq = ''
+    query = []
 
-    for i, query in enumerate(querys):
-        for r in patron.findall(querys[i]):
-            querys[i] = querys[i].replace(r, "'" + r + "'")
+    for y in dt_query.keys():
+        z = dt_query[y]
+        asi = z['op'].lower()
+        gna = instrucions[asi][0]
+        fl  = instrucions[asi][1]
+        regq += z['op'] +' ' + y + ' ' + gna + z['set'] + fl + z['filtro']
+        query.append(z['op'] +' ' + y + ' ' + gna.upper() + z['set'] + fl.upper() + z['filtro'])
 
-    return querys
+    return regq, query
 
-def conexion(query):
+
+def conexion():
+    load_dotenv()
+
+    sql_id = os.getenv("SQL_ID")
+    sql_pw = os.getenv("SQL_PW")
+    cnx = mysql.connector.connect(user=sql_id, password=sql_pw, host='127.0.0.1', database='clientes')
+    return cnx
+
+
+def actualiza(querys):
+    
+    operation = ('; ').join(querys)
+    
     try:
-        cnx = mysql.connector.connect(user=sql_id, password=sql_pw, host='127.0.0.1', database='clientes')
+        
         cursor = cnx.cursor()
-        seleccion = (query)
-        cursor.execute(seleccion)
+        result_iterator = cursor.execute(operation, multi=True)
+        i = 0
+        
+        for res in result_iterator:
+            print("Running query: ", res)
+            print(f"Affected {res.rowcount} rows" )
+            i += 1
+            if i == len(querys): # evitar RuntimeError: 
+                break # generator raised StopIteration
         cnx.commit()
-        return 'ok'
+
+        return True
+    
     except:
-        cnx = mysql.connector.connect(user=sql_id, password=sql_pw, host='127.0.0.1', database='clientes')
-        cursor = cnx.cursor()
-        seleccion = (query)
-        cursor.execute(seleccion)
-        return list(cursor)
+        cnx.close()
+        return "algo anda mal"
+
+    
+def consulta_existe(fireg):
+    
+    consulta = "SELECT COUNT(*) from Actzl WHERE firma = '{}'".format(fireg)
+    
+    cursor = cnx.cursor()
+    cursor.execute(consulta)
+    result=cursor.fetchone()
+    number_of_rows=result[0]
+    
+    return number_of_rows > 0
 
 
+def validacion(a, b):
+    return a == hashlib.sha1(b.lower().encode('utf-8')).hexdigest()
+
+
+
+path = '/home/luis/cibercom/desechosSolidos'
 user = 'sistelca'
 repo_name = 'desechosSolidos'
-path_to_file = 'data_actzl.json'
+chek_orig = 'orig_data.sha1'
+chek_dest = 'dest_data.sha1'
 
-finalJson = leeactzl(user, repo_name, path_to_file)
-
-
-
-# Ojo hay que registrar el hash en db receptora para vefiricar que no este y ejecutar 
-# query
-
-load_dotenv()
-
-sql_id = os.getenv("SQL_ID")
-sql_pw = os.getenv("SQL_PW")
-
-bischo = calcquerys(finalJson)
+checkorg = leeactzl(user, repo_name, chek_orig)
+checkdes = leeactzl(user, repo_name, chek_dest)
 
 
-for bis in bischo:
-# pendiente por probar
-     #ok = conexion(bis)
-     #print(bis + ok)
-     print(bis)
+if checkorg != checkdes:
+
+    # haciendo el git pull si hash difieren
+    comando = "/bin/git -C {} pull origin master".format(path)
+    os.system(comando)
+    
+    with open(os.path.join(path, "orig_data.json"), encoding = 'utf-8') as f:
+        finalJson = json.load(f)
+
+    cnx = conexion()
+
+    for registro in finalJson:
+
+        dt_query = json.loads(registro['instruccion'])
+        fireg, querys = calcquerys(dt_query)
+
+        if validacion(registro['firma'], fireg) and not consulta_existe(registro['firma']):
+
+            # valor 0 en Actzl.pasar => query recibido no se sube a nube,
+            # * en vez de ' inutiliza query descargado
+            intru = registro['instruccion'].replace("'", "*")
+            qact  = """INSERT INTO Actzl (reg_fecha, instruc, firma, pasar)"""
+            qact += """ VALUES ('{}', '{}', '{}', 0)""".format(registro['fecha'], intru,
+                                                               registro['firma'], 0)
+            querys.append(qact)
+
+            print(actualiza(querys))
+
+        else:
+            print(registro['firma'], "Existe ...")
+
+    cnx.close()
+    with open(os.path.join(path, chek_dest), 'w', encoding = 'utf-8') as f:
+        f.write(checkorg)
+    
+    comandos = ["/bin/git -C {} add .", "/bin/git -C {} commit -m \"act\"", 
+               "/bin/git -C {} push origin master"]
+    
+    for comando in comandos:
+        tpcmd = comando.format(path)
+        os.system(tpcmd)
 
 
 
