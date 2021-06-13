@@ -11,7 +11,7 @@ import os
 def leeactzl(user, repo_name, path_to_file):
     json_url ='https://api.github.com/repos/{}/{}/contents/{}'.format(user, repo_name,
                                                                       path_to_file)
-    response = requests.get(json_url) #get data from json file located at specified URL 
+    response = requests.get(json_url) #get data from json file located at specified URL
 
     if response.status_code == requests.codes.ok:
         jsonResponse = response.json()  # the response is a JSON
@@ -22,18 +22,18 @@ def leeactzl(user, repo_name, path_to_file):
         try:
             return json.loads(jsonString)
         except:
-            return jsonString 
- 
+            return jsonString
+
     else:
         return 'Content was not found.'
-    
+
 def calcquerys(dt_query):
-    
+
     instrucions =  {'update': ['set', 'where'],
                  'insert into': ['(', ') values'],
                  'delete from': ['where', 'todo']
-               } 
-    
+               }
+
     regq = ''
     query = []
 
@@ -44,8 +44,10 @@ def calcquerys(dt_query):
         fl  = instrucions[asi][1]
         regq += z['op'] +' ' + y + ' ' + gna + z['set'] + fl + z['filtro']
         query.append(z['op'] +' ' + y + ' ' + gna.upper() + z['set'] + fl.upper() + z['filtro'])
+        
+    retregq = hashlib.sha1(regq.lower().encode('utf-8')).hexdigest()
 
-    return regq, query
+    return retregq, query
 
 
 def conexion():
@@ -57,45 +59,62 @@ def conexion():
     return cnx
 
 
-def actualiza(querys):
-    
-    operation = ('; ').join(querys)
-    
+def actualiza(petts):
+
+    operation = ('; ').join(petts)
+
     try:
-        
+
         cursor = cnx.cursor()
-        result_iterator = cursor.execute(operation, multi=True)
-        i = 0
-        
-        for res in result_iterator:
-            print("Running query: ", res)
-            print(f"Affected {res.rowcount} rows" )
-            i += 1
-            if i == len(querys): # evitar RuntimeError: 
-                break # generator raised StopIteration
+        if len(petts) > 0:
+            result_iterator = cursor.execute(operation, multi=True)
+            i = 0
+
+            for res in result_iterator:
+                print("Running query: ", res)
+                print(f"Affected {res.rowcount} rows" )
+                i += 1
+                if i == len(querys): # evitar RuntimeError:
+                    break # generator raised StopIteration
+                    
+        else:
+            cursor.execute(operation)
+            
         cnx.commit()
 
         return True
-    
+
     except:
         cnx.close()
-        return "algo anda mal"
+        return operation
 
-    
+
 def consulta_existe(fireg):
-    
-    consulta = "SELECT COUNT(*) from Actzl WHERE firma = '{}'".format(fireg)
-    
+
+    consulta = """SELECT COUNT(*) from Actzl WHERE firma = '{}'""".format(fireg)
+    cnx = conexion()
     cursor = cnx.cursor()
     cursor.execute(consulta)
     result=cursor.fetchone()
     number_of_rows=result[0]
-    
+    cnx.close()
     return number_of_rows > 0
 
 
 def validacion(a, b):
     return a == hashlib.sha1(b.lower().encode('utf-8')).hexdigest()
+
+def giter(cmd, path):
+    if cmd == "pull":
+        comandos = ["/bin/git -C {} pull origin master"]
+    elif cmd == "push":
+        comandos = ["/bin/git -C {} add .", "/bin/git -C {} commit -m \"act\"",
+                    "/bin/git -C {} push origin master"]
+
+    for comando in comandos:
+        tpcmd = comando.format(path)
+        os.system(tpcmd)
+    return True
 
 
 
@@ -112,9 +131,8 @@ checkdes = leeactzl(user, repo_name, chek_dest)
 if checkorg != checkdes:
 
     # haciendo el git pull si hash difieren
-    comando = "/bin/git -C {} pull origin master".format(path)
-    os.system(comando)
-    
+    giter("pull", path)
+
     with open(os.path.join(path, "orig_data.json"), encoding = 'utf-8') as f:
         finalJson = json.load(f)
 
@@ -137,19 +155,15 @@ if checkorg != checkdes:
 
             print(actualiza(querys))
 
-        else:
-            print(registro['firma'], "Existe ...")
+        elif consulta_existe(registro['firma']):
+            query = """UPDATE Actzl set pasar=1 WHERE firma='{}'""".format(fireg)
+            print(actualiza([query]), '\n')
 
     cnx.close()
     with open(os.path.join(path, chek_dest), 'w', encoding = 'utf-8') as f:
         f.write(checkorg)
-    
-    comandos = ["/bin/git -C {} add .", "/bin/git -C {} commit -m \"act\"", 
-               "/bin/git -C {} push origin master"]
-    
-    for comando in comandos:
-        tpcmd = comando.format(path)
-        os.system(tpcmd)
+
+    giter("push", path)
 
 
 

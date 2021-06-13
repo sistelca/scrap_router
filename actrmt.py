@@ -37,6 +37,19 @@ def conexion():
     return cnx
 
 
+def giter(cmd, path):
+    if cmd == "pull":
+        comandos = ["/bin/git -C {} pull origin master"]
+    elif cmd == "push":
+        comandos = ["/bin/git -C {} add .", "/bin/git -C {} commit -m \"act\"",
+                    "/bin/git -C {} push origin master"]
+ 
+    for comando in comandos:
+        tpcmd = comando.format(path)
+        os.system(tpcmd)
+    return pass
+
+
 cnx = conexion()
 cursor = cnx.cursor()
 query = ("select * from Actzl where pasar=2")
@@ -76,8 +89,9 @@ if len(datos) > 0:
 
         with open(os.path.join(path, file_orig_check), 'w', encoding = 'utf-8') as f:
             f.write(check_orig)
-            
+
         # hacer git
+        giter('push', path)
 
         for x in ides:
             query = ("UPDATE Actzl SET pasar=0 WHERE id = {}").format(x)
