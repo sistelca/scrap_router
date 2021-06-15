@@ -1,5 +1,5 @@
 import requests
-import base64
+#import base64
 import json
 import hashlib
 
@@ -8,24 +8,24 @@ from dotenv import load_dotenv
 import os
 
 
-def leeactzl(user, repo_name, path_to_file):
-    json_url ='https://api.github.com/repos/{}/{}/contents/{}'.format(user, repo_name,
-                                                                      path_to_file)
-    response = requests.get(json_url) #get data from json file located at specified URL
+# def leeactzl(user, repo_name, path_to_file):
+#     json_url ='https://api.github.com/repos/{}/{}/contents/{}'.format(user, repo_name,
+#                                                                       path_to_file)
+#     response = requests.get(json_url) #get data from json file located at specified URL
 
-    if response.status_code == requests.codes.ok:
-        jsonResponse = response.json()  # the response is a JSON
-        #the JSON is encoded in base 64, hence decode it
-        content = base64.b64decode(jsonResponse['content'])
-        #convert the byte stream to string
-        jsonString = content.decode('utf-8')
-        try:
-            return json.loads(jsonString)
-        except:
-            return jsonString
+#     if response.status_code == requests.codes.ok:
+#         jsonResponse = response.json()  # the response is a JSON
+#         #the JSON is encoded in base 64, hence decode it
+#         content = base64.b64decode(jsonResponse['content'])
+#         #convert the byte stream to string
+#         jsonString = content.decode('utf-8')
+#         try:
+#             return json.loads(jsonString)
+#         except:
+#             return jsonString
 
-    else:
-        return 'Content was not found.'
+#     else:
+#         return 'Content was not found.'
 
 def calcquerys(dt_query):
 
@@ -64,22 +64,22 @@ def actualiza(petts):
     operation = ('; ').join(petts)
 
     try:
-
         cursor = cnx.cursor()
-        if len(petts) > 0:
+        if len(petts) > 1:
+            
             result_iterator = cursor.execute(operation, multi=True)
-            i = 0
+            #i = 0
 
             for res in result_iterator:
                 print("Running query: ", res)
                 print(f"Affected {res.rowcount} rows" )
-                i += 1
-                if i == len(querys): # evitar RuntimeError:
-                    break # generator raised StopIteration
-                    
+                #i += 1
+                #if i == len(petts): # evitar RuntimeError:
+                #    break # generator raised StopIteration
+
         else:
+
             cursor.execute(operation)
-            
         cnx.commit()
 
         return True
@@ -101,37 +101,41 @@ def consulta_existe(fireg):
     return number_of_rows > 0
 
 
-def validacion(a, b):
-    return a == hashlib.sha1(b.lower().encode('utf-8')).hexdigest()
-
 def giter(cmd, path):
     if cmd == "pull":
         comandos = ["/bin/git -C {} pull origin master"]
     elif cmd == "push":
         comandos = ["/bin/git -C {} add .", "/bin/git -C {} commit -m \"act\"",
-                    "/bin/git -C {} push origin master"]
+                    "/bin/git -C {} push origin prometea"]
 
     for comando in comandos:
         tpcmd = comando.format(path)
         os.system(tpcmd)
     return True
 
+def leeshas(file):
+    try:
+        with open(file, encoding = 'utf-8') as f:
+            return f.readline()
+    except:
+        return 'vacio'
+
+# user = 'sistelca'
+# repo_name = 'desechosSolidos'
 
 
 path = '/home/luis/cibercom/desechosSolidos'
-user = 'sistelca'
-repo_name = 'desechosSolidos'
 chek_orig = 'orig_data.sha1'
 chek_dest = 'dest_data.sha1'
 
-checkorg = leeactzl(user, repo_name, chek_orig)
-checkdes = leeactzl(user, repo_name, chek_dest)
+giter("pull", path)
 
 
-if checkorg != checkdes:
+checkorg = leeshas(os.path.join(path, chek_orig))
+checkdes = leeshas(os.path.join(path, chek_dest))
 
-    # haciendo el git pull si hash difieren
-    giter("pull", path)
+
+if checkorg != checkdes and checkorg != 'vacio':
 
     with open(os.path.join(path, "orig_data.json"), encoding = 'utf-8') as f:
         finalJson = json.load(f)
@@ -143,7 +147,7 @@ if checkorg != checkdes:
         dt_query = json.loads(registro['instruccion'])
         fireg, querys = calcquerys(dt_query)
 
-        if validacion(registro['firma'], fireg) and not consulta_existe(registro['firma']):
+        if registro['firma'] == fireg and not consulta_existe(registro['firma']):
 
             # valor 0 en Actzl.pasar => query recibido no se sube a nube,
             # * en vez de ' inutiliza query descargado
@@ -156,7 +160,7 @@ if checkorg != checkdes:
             print(actualiza(querys))
 
         elif consulta_existe(registro['firma']):
-            query = """UPDATE Actzl set pasar=1 WHERE firma='{}'""".format(fireg)
+            query = """UPDATE Actzl set pasar=0 WHERE firma='{}'""".format(fireg)
             print(actualiza([query]), '\n')
 
     cnx.close()
@@ -164,6 +168,4 @@ if checkorg != checkdes:
         f.write(checkorg)
 
     giter("push", path)
-
-
 
