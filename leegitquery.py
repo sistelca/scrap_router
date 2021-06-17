@@ -41,7 +41,11 @@ def calcquerys(dt_query):
         z = dt_query[y]
         asi = z['op'].lower()
         gna = instrucions[asi][0]
-        fl  = instrucions[asi][1]
+        if instrucions[asi][1] != 'todo':
+            fl = instrucions[asi][1]
+        else:
+            fl = ''
+
         regq += z['op'] +' ' + y + ' ' + gna + z['set'] + fl + z['filtro']
         query.append(z['op'] +' ' + y + ' ' + gna.upper() + z['set'] + fl.upper() + z['filtro'])
         
