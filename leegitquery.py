@@ -110,7 +110,7 @@ def giter(cmd, path):
         comandos = ["/bin/git -C {} pull origin master"]
     elif cmd == "push":
         comandos = ["/bin/git -C {} add .", "/bin/git -C {} commit -m \"act\"",
-                    "/bin/git -C {} push origin prometea"]
+                    "/bin/git -C {} push origin master"]
 
     for comando in comandos:
         tpcmd = comando.format(path)
@@ -172,4 +172,4 @@ if checkorg != checkdes and checkorg != 'vacio':
         f.write(checkorg)
 
     giter("push", path)
-
+    os.system("/home/luis/cibercom/actlz.sh")
