@@ -42,7 +42,7 @@ def giter(cmd, path):
         comandos = ["/bin/git -C {} pull origin master"]
     elif cmd == "push":
         comandos = ["/bin/git -C {} add .", "/bin/git -C {} commit -m \"act\"",
-                    "/bin/git -C {} push origin master"]
+                    "/bin/git -C {} push origin master 2>&1 | tee -a /root/log.txt"]
  
     for comando in comandos:
         tpcmd = comando.format(path)
@@ -83,15 +83,15 @@ if len(datos) > 0:
     file_dest_check = "dest_data.sha1"
     giter('pull', path)
 
-    cheq_org  = leeshas(user, repo_name, file_orig_check)
-    cheq_dest = leeshas(user, repo_name, file_dest_check)
+    cheq_org  = leeshas(file_orig_check)
+    cheq_dest = leeshas(file_dest_check)
 
     orig = json.dumps(datos)
     check_orig = hashlib.sha1(orig.encode('utf-8')).hexdigest()
 
     # si origen local es diferente a origen remoto y
     # remoto origen y destinos son iguales
-    if check_orig != cheq_org and cheq_org == cheq_dest:
+    if cheq_dest == 'vacio' or cheq_org == cheq_dest:
     
         with open(os.path.join(path, file_orig), 'w', encoding = 'utf-8') as f:
             json.dump(datos, f)
