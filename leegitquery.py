@@ -1,5 +1,4 @@
 import requests
-#import base64
 import json
 import hashlib
 
@@ -7,25 +6,6 @@ import mysql.connector
 from dotenv import load_dotenv
 import os
 
-
-# def leeactzl(user, repo_name, path_to_file):
-#     json_url ='https://api.github.com/repos/{}/{}/contents/{}'.format(user, repo_name,
-#                                                                       path_to_file)
-#     response = requests.get(json_url) #get data from json file located at specified URL
-
-#     if response.status_code == requests.codes.ok:
-#         jsonResponse = response.json()  # the response is a JSON
-#         #the JSON is encoded in base 64, hence decode it
-#         content = base64.b64decode(jsonResponse['content'])
-#         #convert the byte stream to string
-#         jsonString = content.decode('utf-8')
-#         try:
-#             return json.loads(jsonString)
-#         except:
-#             return jsonString
-
-#     else:
-#         return 'Content was not found.'
 
 def calcquerys(dt_query):
 
@@ -124,10 +104,6 @@ def leeshas(file):
     except:
         return 'vacio'
 
-# user = 'sistelca'
-# repo_name = 'desechosSolidos'
-
-
 path = '/home/luis/cibercom/desechosSolidos'
 chek_orig = 'orig_data.sha1'
 chek_dest = 'dest_data.sha1'
@@ -147,8 +123,8 @@ if checkorg != checkdes and checkorg != 'vacio':
     cnx = conexion()
 
     for registro in finalJson:
-
-        dt_query = json.loads(registro['instruccion'])
+        datax = registro['instruccion']
+        dt_query = json.loads(datax.replace('u00', '\\u00'))
         fireg, querys = calcquerys(dt_query)
 
         if registro['firma'] == fireg and not consulta_existe(registro['firma']):

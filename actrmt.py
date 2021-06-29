@@ -4,27 +4,6 @@ import os
 import json
 import hashlib
 import requests
-# import base64
-
-# def leeactzl(user, repo_name, path_to_file):
-#     json_url ='https://api.github.com/repos/{}/{}/contents/{}'.format(user, repo_name,
-#                                                                       path_to_file)
-#     response = requests.get(json_url) #get data from json file located at specified URL 
-
-#     if response.status_code == requests.codes.ok:
-#         jsonResponse = response.json()  # the response is a JSON
-#         #the JSON is encoded in base 64, hence decode it
-#         content = base64.b64decode(jsonResponse['content'])
-#         #convert the byte stream to string
-#         jsonString = content.decode('utf-8')
-#         try:
-#             return json.loads(jsonString)
-#         except:
-#              return jsonString
- 
-#     else:
-#         return 'Content was not found.'
-
 
 def conexion():
     load_dotenv()
@@ -35,7 +14,6 @@ def conexion():
     sql_db = os.getenv("SQL_DB")
     cnx = mysql.connector.connect(user=sql_id, password=sql_pw, host='127.0.0.1', database=sql_db)
     return cnx
-
 
 def giter(cmd, path):
     if cmd == "pull":
@@ -59,7 +37,7 @@ def leeshas(file):
 
 cnx = conexion()
 cursor = cnx.cursor()
-query = ("select * from Actzl where pasar=2")
+query = """select * from Actzl where pasar>0"""
 cursor.execute(query)
 result = cursor.fetchall()
 
@@ -82,29 +60,42 @@ if len(datos) > 0:
     file_orig_check = "orig_data.sha1"
     file_dest_check = "dest_data.sha1"
     giter('pull', path)
+    
+    #query1= """select hash_bloq from cade_bloqs order by created_at desc limit 1"""
+    #cursor.execute(query1)
+    #try:
+    #    hash_ureg = cursor.fetchone()[0]
+    #except:
+    #    hash_ureg = 'vacio'
 
     cheq_org  = leeshas(file_orig_check)
     cheq_dest = leeshas(file_dest_check)
+    
+    # leer desde ultimo registro de cade_bloqs el campohash_bloq
+    # para compararlo en el siguiente if
 
     orig = json.dumps(datos)
     check_orig = hashlib.sha1(orig.encode('utf-8')).hexdigest()
 
+    with open(os.path.join(path, file_orig), 'w', encoding = 'utf-8') as f:
+        json.dump(datos, f)
+
+    with open(os.path.join(path, file_orig_check), 'w', encoding = 'utf-8') as f:
+        f.write(check_orig)
+
+    # hacer git
+    giter('push', path)
+    
     # si origen local es diferente a origen remoto y
     # remoto origen y destinos son iguales
     if cheq_dest == 'vacio' or cheq_org == cheq_dest:
-    
-        with open(os.path.join(path, file_orig), 'w', encoding = 'utf-8') as f:
-            json.dump(datos, f)
-
-        with open(os.path.join(path, file_orig_check), 'w', encoding = 'utf-8') as f:
-            f.write(check_orig)
-
-        # hacer git
-        giter('push', path)
-
-        for x in ides:
-            query = ("UPDATE Actzl SET pasar=0 WHERE id = {}").format(x)
-            cursor.execute(query)
+        sel_pass = 0
+        for y in ides:
+            query = """UPDATE Actzl SET pasar={} WHERE id = {}""".format(sel_pass, y)
+            cursor.execute(query)        
+        
+    #elif cheq_org != cheq_dest:
+    #    sel_pass = 1
 
 cnx.commit()
 cursor.close()
