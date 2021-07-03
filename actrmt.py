@@ -61,12 +61,12 @@ if len(datos) > 0:
     file_dest_check = "dest_data.sha1"
     giter('pull', path)
     
-    #query1= """select hash_bloq from cade_bloqs order by created_at desc limit 1"""
-    #cursor.execute(query1)
-    #try:
-    #    hash_ureg = cursor.fetchone()[0]
-    #except:
-    #    hash_ureg = 'vacio'
+    query1= """select hash_bloq from cade_bloqs order by created_at desc limit 1"""
+    cursor.execute(query1)
+    try:
+        hash_ureg = cursor.fetchone()[0]
+    except:
+        hash_ureg = 'vacio'
 
     cheq_org  = leeshas(file_orig_check)
     cheq_dest = leeshas(file_dest_check)
@@ -92,10 +92,14 @@ if len(datos) > 0:
         sel_pass = 0
         for y in ides:
             query = """UPDATE Actzl SET pasar={} WHERE id = {}""".format(sel_pass, y)
-            cursor.execute(query)        
-        
+            cursor.execute(query)
+
+        query2 = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(orig, check_orig, hash_ureg)
+        cursor.execute(query2)
     #elif cheq_org != cheq_dest:
     #    sel_pass = 1
+
+    
 
 cnx.commit()
 cursor.close()

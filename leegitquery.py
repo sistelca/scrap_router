@@ -143,7 +143,10 @@ if checkorg != checkdes and checkorg != 'vacio':
             query = """UPDATE Actzl set pasar=0 WHERE firma='{}'""".format(fireg)
             print(actualiza([query]), '\n')
 
+    query2 = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(finalJson), checkorg, checkdes)
+    print(actualiza([query2]), '\n')
     cnx.close()
+
     with open(os.path.join(path, chek_dest), 'w', encoding = 'utf-8') as f:
         f.write(checkorg)
 
