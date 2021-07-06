@@ -32,7 +32,6 @@ def leeshas(file):
     except:
         return 'vacio'
 
-
 class Datos:
     def __init__(self) -> None:
         self.cnx = conexion()
@@ -65,9 +64,6 @@ class Datos:
         cursor.execute(query)
         result = cursor.fetchall()
 
-        # sequence = cursor.column_names
-        # print(sequence)
-
         datos = []
         ides = []
         for x in result:
@@ -76,9 +72,6 @@ class Datos:
 
         if len(datos) > 0:
 
-            #user = 'sistelca'
-            #repo_name = 'desechosSolidos'
-
             giter('pull', self.path)
             
             hash_ureg = self.lea_utl_hash(self)
@@ -86,9 +79,6 @@ class Datos:
             cheq_org  = leeshas(self.file_orig_check)
             cheq_dest = leeshas(self.file_dest_check)
             
-            # leer desde ultimo registro de cade_bloqs el campohash_bloq
-            # para compararlo en el siguiente if
-
             orig = json.dumps(datos)
             check_orig = hashlib.sha1(orig.encode('utf-8')).hexdigest()
 
@@ -149,14 +139,10 @@ class Datos:
             if len(petts) > 1:
                 
                 result_iterator = cursor.execute(operation, multi=True)
-                #i = 0
 
                 for res in result_iterator:
                     print("Running query: ", res)
                     print(f"Affected {res.rowcount} rows" )
-                    #i += 1
-                    #if i == len(petts): # evitar RuntimeError:
-                    #    break # generator raised StopIteration
 
             else:
 
@@ -169,7 +155,6 @@ class Datos:
             self.cnx.close()
             return operation
 
-
     def consulta_existe(self, fireg):
 
         consulta = """SELECT COUNT(*) from Actzl WHERE firma = '{}'""".format(fireg)
@@ -178,7 +163,6 @@ class Datos:
         result=cursor.fetchone()
         number_of_rows=result[0]
         return number_of_rows > 0
-
 
     def recibir(self):
         giter("pull", self.path)
