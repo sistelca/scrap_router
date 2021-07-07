@@ -2,14 +2,14 @@ import hashlib
 import json
 import logging
 import os
-
+from dotenv import load_dotenv
 import mysql.connector
 
 logger = logging.getLogger(__name__)
 
 
 class Datos:
-
+    load_dotenv()
     _SQL_ID = os.environ.get("SQL_ID")
     _SQL_PW = os.environ.get("SQL_PW")
     _SQL_HOST = os.environ.get("SQL_HOST")
@@ -20,9 +20,10 @@ class Datos:
     _FILE_ORIG = os.environ.get("FILE_ORIG")
     _FILE_ORIG_CHECK = os.environ.get("FILE_ORIG_CHECK")
     _FILE_DEST_CHECK = os.environ.get("FILE_DEST_CHECK")
+    _DATA_ORIG = os.environ.get("DATA_ORIG")
     _CHEK_ORIG = os.environ.get("CHEK_ORIG")
     _CHEK_DEST = os.environ.get("CHEK_DEST")
-    _DATA_ORIG = os.environ.get("DATA_ORIG")
+    
 
     def __init__(self) -> None:
         self.cnx = mysql.connector.connect(
@@ -208,4 +209,16 @@ class Datos:
                 f.write(checkorg)
 
             self.giter("push")
-            os.system(os.path.join(self.path_work, "actlz.sh"))
+            try:
+                os.system(os.path.join(self.path_work, "actlz.sh"))
+            except:
+                pass
+
+def main():
+    datos = Datos()
+
+    datos.enviar()
+    datos.recibir()
+
+if __name__=='__main__':
+    main()
