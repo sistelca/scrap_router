@@ -4,6 +4,8 @@ import logging
 import os
 from dotenv import load_dotenv
 import mysql.connector
+from datetime import datetime
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -36,13 +38,13 @@ class Datos:
         self.path_work = self._PATH_WORK # ruta de scripts de comandos cibercom
         self.path = self._PATH_DATA #<- ruta de datos
         # para envio
-        self.file_orig = _FILE_ORIG              #<- local_data
-        self.file_orig_check = _FILE_ORIG_CHECK  #<- local_data_sha
-        self.file_dest_check = _FILE_DEST_CHECK  #<- remot_data_sha
+        self.file_orig = self._FILE_ORIG              #<- local_data
+        self.file_orig_check = self._FILE_ORIG_CHECK  #<- local_data_sha
+        self.file_dest_check = self._FILE_DEST_CHECK  #<- remot_data_sha
         # para recibir
-        self.chek_orig = _CHEK_ORIG    # hash archivo remoto enviado
-        self.chek_dest = _CHEK_DEST    # hash archivo remoto recibido
-        self.data_orig = _DATA_ORIG    # archivo remoto enviado
+        self.chek_orig = self._CHEK_ORIG    # hash archivo remoto enviado
+        self.chek_dest = self._CHEK_DEST    # hash archivo remoto recibido
+        self.data_orig = self._DATA_ORIG    # archivo remoto enviado
         # para instanciar cursor
         self.cursor = self.cnx.cursor()
 
@@ -50,14 +52,15 @@ class Datos:
     #    return self.cursor = self.cnx.cursor()
 
     def giter(self, cmd):
+        # la rama de prueba es main volver a master en produccion OjO
         if cmd == "pull":
             comandos = [
-                "/bin/git -C {} pull origin master"
+                "/bin/git -C {} pull origin main"
             ]
         elif cmd == "push":
             comandos = [
                 "/bin/git -C {} add .", "/bin/git -C {} commit -m \"act\"",
-                "/bin/git -C {} push origin master 2>&1 | tee -a /root/log.txt"
+                "/bin/git -C {} push origin main 2>&1 | tee -a /root/log.txt"
             ]
  
         for comando in comandos:
@@ -65,7 +68,7 @@ class Datos:
             os.system(tpcmd)
         return True
 
-    def leeshas(file):
+    def leeshas(self, file):
         try:
             with open(file, encoding = "utf-8") as f:
                 return f.readline()
@@ -102,7 +105,7 @@ class Datos:
 
         if len(datos) > 0:
             self.giter("pull")
-            hash_ureg = self.lea_utl_hash(self)
+            hash_ureg = self.lea_utl_hash()
             cheq_org  = self.leeshas(self.file_orig_check)
             cheq_dest = self.leeshas(self.file_dest_check)
             orig = json.dumps(datos)
@@ -116,6 +119,7 @@ class Datos:
 
             self.giter("push")
             if cheq_dest == "vacio" or cheq_org == cheq_dest:
+                #timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 sel_pass = 0
                 for id in ides:
                     first_query = """UPDATE Actzl SET pasar={} WHERE id = {}""".format(sel_pass, id)
