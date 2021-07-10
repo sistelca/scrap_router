@@ -93,6 +93,7 @@ class Datos:
 
         datos = []
         ides = []
+        firmas = []
         for x in result:
             datos.append(
                 {
@@ -102,6 +103,7 @@ class Datos:
                 }
             )
             ides.append(x[0])
+            firmas.append(x[3])
 
         if len(datos) > 0:
             self.giter("pull")
@@ -125,7 +127,7 @@ class Datos:
                     first_query = """UPDATE Actzl SET pasar={} WHERE id = {}""".format(sel_pass, id)
                     self.cursor.execute(first_query)
 
-                second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(orig, check_orig, hash_ureg)
+                second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(firmas), check_orig, hash_ureg)
                 self.cursor.execute(second_query)
 
     def calcquerys(dt_query):
@@ -189,10 +191,12 @@ class Datos:
             with open(os.path.join(self.path, self.data_orig), encoding = "utf-8") as f:
                 finalJson = json.load(f)
 
+            firmas = []
             for registro in finalJson:
                 datax = registro["instruccion"]
                 dt_query = json.loads(datax.replace("u00", "\\u00"))
                 fireg, querys = self.calcquerys(dt_query)
+                firmas.append[registro['firma']]
 
                 if registro["firma"] == fireg and not self.consulta_existe(registro["firma"]):
                     intru = registro['instruccion'].replace("'", "*")
@@ -206,7 +210,7 @@ class Datos:
                     query = """UPDATE Actzl set pasar=0 WHERE firma='{}'""".format(fireg)
                     logger.debug("{} ".format(self.actualizar([query])))
 
-            second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(finalJson), checkorg, self.lea_utl_hash(self))
+            second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(firmas), checkorg, self.lea_utl_hash(self))
             logger.debug("{} ".format(self.actualizar([second_query])))
 
             with open(os.path.join(self.path, self.chek_dest), "w", encoding = "utf-8") as f:
