@@ -4,8 +4,7 @@ import logging
 import os
 from dotenv import load_dotenv
 import mysql.connector
-from datetime import datetime
-import re
+
 
 logger = logging.getLogger(__name__)
 
@@ -108,8 +107,10 @@ class Datos:
         if len(datos) > 0:
             self.giter("pull")
             hash_ureg = self.lea_utl_hash()
-            cheq_org  = self.leeshas(self.file_orig_check)
-            cheq_dest = self.leeshas(self.file_dest_check)
+
+            cheq_org  = self.leeshas(os.path.join(self.path, self.file_orig_check))
+            cheq_dest = self.leeshas(os.path.join(self.path, self.file_dest_check))
+
             orig = json.dumps(datos)
             check_orig = hashlib.sha1(orig.encode("utf-8")).hexdigest()
 
@@ -130,7 +131,7 @@ class Datos:
                 second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(firmas), check_orig, hash_ureg)
                 self.cursor.execute(second_query)
 
-    def calcquerys(dt_query):
+    def calcquerys(self, dt_query):
         instrucions = {
             'update': ['set', 'where'],
             'insert into': ['(', ') values'],
