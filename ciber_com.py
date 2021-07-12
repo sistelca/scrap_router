@@ -124,9 +124,7 @@ class Datos:
                 f.write(check_orig)
 
             first_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(firmas), check_orig, hash_ureg)
-            self.cursor.execute(first_query)
-            self.cnx.commit()
-
+            logger.debug("{} ".format(self.actualizar([first_query])))
 
             self.giter("push")
             if cheq_dest != "vacio" and cheq_org == cheq_dest:
@@ -134,10 +132,13 @@ class Datos:
                 firmas_leidas_tx = self.lea_utl_hash(cheq_dest)
                 firmas_leidas = json.loads(firmas_leidas_tx)
                 sel_pass = 0
+                querys = []
                 for fir in firmas_leidas:
                     second_query = """UPDATE Actzl SET pasar={} WHERE firma = {}""".format(sel_pass, fir)
-                    self.cursor.execute(second_query)
-
+                    querys.append(second_query)
+                terc_query = """UPDATE cade_bloqs SET confirmado={} WHERE hash_bloq={}""".format(sel_pass, cheq_dest)
+                querys.append(terc_query)
+                logger.debug("{} ".format(self.actualizar(querys)))
 
 
     def calcquerys(self, dt_query):
