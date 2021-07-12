@@ -75,8 +75,11 @@ class Datos:
             logger.exception(e)
             return "vacio"
 
-    def lea_utl_hash(self):
-        first_query = """select hash_bloq from cade_bloqs order by created_at desc limit 1"""
+    def lea_utl_hash(self, blq=None): # selecciona ultimo registro por fecha de cadena de bloques
+        if blq==None:
+            first_query = """select hash_bloq from cade_bloqs order by created_at desc limit 1"""
+        else:
+            first_query = """select bloq from cade_bloqs where hash_bloq=={}""".format(blq)
         self.cursor.execute(first_query)
         try:
             hash_ureg = self.cursor.fetchone()[0]
@@ -120,16 +123,20 @@ class Datos:
             with open(os.path.join(self.path, self.file_orig_check), "w", encoding = "utf-8") as f:
                 f.write(check_orig)
 
-            self.giter("push")
-            if cheq_dest == "vacio" or cheq_org == cheq_dest:
-                #timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                sel_pass = 0
-                for id in ides:
-                    first_query = """UPDATE Actzl SET pasar={} WHERE id = {}""".format(sel_pass, id)
-                    self.cursor.execute(first_query)
+            first_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(firmas), check_orig, hash_ureg)
+            self.cursor.execute(first_query)
 
-                second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(firmas), check_orig, hash_ureg)
-                self.cursor.execute(second_query)
+            self.giter("push")
+            if cheq_dest != "vacio" and cheq_org == cheq_dest:
+                # buscar cheq_dest en cade_bloqs y leer firmas
+                firmas_leidas_tx = self.lea_utl_hash(cheq_dest)
+                firmas_leidas = json.loads(firmas_leidas_tx)
+                sel_pass = 0
+                for fir in firmas_leidas:
+                    second_query = """UPDATE Actzl SET pasar={} WHERE firma = {}""".format(sel_pass, fir)
+                    self.cursor.execute(second_query)
+
+
 
     def calcquerys(self, dt_query):
         instrucions = {
