@@ -221,7 +221,7 @@ class Datos:
                     query = """UPDATE Actzl set pasar=0 WHERE firma='{}'""".format(fireg)
                     logger.debug("{} ".format(self.actualizar([query])))
 
-            second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(firmas), checkorg, self.lea_utl_hash())
+            second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant, confirmado) values ({}, {}, {})""".format(json.dumps(firmas), checkorg, self.lea_utl_hash(), 0)
             logger.debug("{} ".format(self.actualizar([second_query])))
 
             with open(os.path.join(self.path, self.chek_dest), "w", encoding = "utf-8") as f:
