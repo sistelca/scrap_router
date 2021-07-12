@@ -125,6 +125,8 @@ class Datos:
 
             first_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(firmas), check_orig, hash_ureg)
             self.cursor.execute(first_query)
+            self.cnx.commit()
+
 
             self.giter("push")
             if cheq_dest != "vacio" and cheq_org == cheq_dest:
@@ -180,7 +182,7 @@ class Datos:
             return True
 
         except:
-            self.cnx.close()
+            self.cnx.rollback()
             return operation
 
     def consulta_existe(self, fireg):
@@ -218,7 +220,7 @@ class Datos:
                     query = """UPDATE Actzl set pasar=0 WHERE firma='{}'""".format(fireg)
                     logger.debug("{} ".format(self.actualizar([query])))
 
-            second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(firmas), checkorg, self.lea_utl_hash(self))
+            second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(firmas), checkorg, self.lea_utl_hash())
             logger.debug("{} ".format(self.actualizar([second_query])))
 
             with open(os.path.join(self.path, self.chek_dest), "w", encoding = "utf-8") as f:
