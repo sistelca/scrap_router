@@ -94,7 +94,6 @@ class Datos:
         result = self.cursor.fetchall()
 
         datos = []
-        ides = []
         firmas = []
         for x in result:
             datos.append(
@@ -104,7 +103,6 @@ class Datos:
                     "firma": x[3]
                 }
             )
-            ides.append(x[0])
             firmas.append(x[3])
 
         if len(datos) > 0:
@@ -123,23 +121,22 @@ class Datos:
             with open(os.path.join(self.path, self.file_orig_check), "w", encoding = "utf-8") as f:
                 f.write(check_orig)
 
-            first_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(firmas), check_orig, hash_ureg)
-            logger.debug("{} ".format(self.actualizar([first_query])))
-
             self.giter("push")
-            if cheq_dest != "vacio" and cheq_org == cheq_dest:
+            if cheq_dest != "vacio" and hash_ureg == cheq_dest:
                 # buscar cheq_dest en cade_bloqs y leer firmas
                 firmas_leidas_tx = self.lea_utl_hash(cheq_dest)
                 firmas_leidas = json.loads(firmas_leidas_tx)
                 sel_pass = 0
-                querys = []
+                querys = ["""INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(firmas), check_orig, hash_ureg)]
                 for fir in firmas_leidas:
                     second_query = """UPDATE Actzl SET pasar={} WHERE firma = {}""".format(sel_pass, fir)
                     querys.append(second_query)
                 terc_query = """UPDATE cade_bloqs SET confirmado={} WHERE hash_bloq={}""".format(sel_pass, cheq_dest)
                 querys.append(terc_query)
                 logger.debug("{} ".format(self.actualizar(querys)))
-
+            elif hash_ureg == "vacio":
+                querys = ["""INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(firmas), check_orig, hash_ureg)]
+                logger.debug("{} ".format(self.actualizar(querys)))
 
     def calcquerys(self, dt_query):
         instrucions = {
