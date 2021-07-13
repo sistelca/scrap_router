@@ -89,6 +89,36 @@ class Datos:
         return hash_ureg
 
     def enviar(self):
+        # que no se volvera a enviar
+        self.giter("pull")
+
+        hash_ureg = self.lea_utl_hash()
+
+        cheq_org  = self.leeshas(os.path.join(self.path, self.file_orig_check))
+        cheq_dest = self.leeshas(os.path.join(self.path, self.file_dest_check))
+
+        confir_query = """select confirmado from cade_bloqs where hash_bloq=={}""".format(cheq_dest)
+        self.cursor.execute(confir_query)
+        try:
+            confir = self.cursor.fetchone()[0]
+        except:
+            confir = 2
+
+        if cheq_dest != "vacio" and hash_ureg == cheq_dest and confir > 0:
+            # buscar cheq_dest en cade_bloqs y leer firmas
+            firmas_leidas_tx = self.lea_utl_hash(cheq_dest)
+            firmas_leidas = json.loads(firmas_leidas_tx)
+            sel_pass = 0
+
+            for fir in firmas_leidas:
+                second_query = """UPDATE Actzl SET pasar={} WHERE firma = '{}'""".format(sel_pass, fir)
+                querys.append(second_query)
+            terc_query = """UPDATE cade_bloqs SET confirmado={} WHERE hash_bloq='{}'""".format(sel_pass, cheq_dest)
+            querys.append(terc_query)
+            logger.debug("{} ".format(self.actualizar(querys)))
+
+
+        # que si se va a enviar
         query = """select * from Actzl where pasar > 0"""
         self.cursor.execute(query)
         result = self.cursor.fetchall()
@@ -105,12 +135,7 @@ class Datos:
             )
             firmas.append(x[3])
 
-        if len(datos) > 0:
-            self.giter("pull")
-            hash_ureg = self.lea_utl_hash()
-
-            cheq_org  = self.leeshas(os.path.join(self.path, self.file_orig_check))
-            cheq_dest = self.leeshas(os.path.join(self.path, self.file_dest_check))
+        if len(datos) > 0 and hash_ureg == cheq_dest:
 
             orig = json.dumps(datos)
             check_orig = hashlib.sha1(orig.encode("utf-8")).hexdigest()
@@ -123,21 +148,9 @@ class Datos:
                     f.write(check_orig)
 
             self.giter("push")
-            if cheq_dest != "vacio" and hash_ureg == cheq_dest:
-                # buscar cheq_dest en cade_bloqs y leer firmas
-                firmas_leidas_tx = self.lea_utl_hash(cheq_dest)
-                firmas_leidas = json.loads(firmas_leidas_tx)
-                sel_pass = 0
-                querys = ["""INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ('{}', '{}', '{}')""".format(json.dumps(firmas), check_orig, hash_ureg)]
-                for fir in firmas_leidas:
-                    second_query = """UPDATE Actzl SET pasar={} WHERE firma = '{}'""".format(sel_pass, fir)
-                    querys.append(second_query)
-                terc_query = """UPDATE cade_bloqs SET confirmado={} WHERE hash_bloq='{}'""".format(sel_pass, cheq_dest)
-                querys.append(terc_query)
-                logger.debug("{} ".format(self.actualizar(querys)))
-            elif hash_ureg == "vacio":
-                querys = ["""INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ('{}', '{}', '{}')""".format(json.dumps(firmas), check_orig, hash_ureg)]
-                logger.debug(" {} ".format(self.actualizar(querys)))
+
+            querys = ["""INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ('{}', '{}', '{}')""".format(json.dumps(firmas), check_orig, hash_ureg)]
+            logger.debug(" {} ".format(self.actualizar(querys)))
 
     def calcquerys(self, dt_query):
         instrucions = {
