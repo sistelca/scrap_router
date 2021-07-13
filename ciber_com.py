@@ -115,11 +115,12 @@ class Datos:
             orig = json.dumps(datos)
             check_orig = hashlib.sha1(orig.encode("utf-8")).hexdigest()
 
-            with open(os.path.join(self.path, self.file_orig), "w", encoding = "utf-8") as f:
-                json.dump(datos, f)
+            if cheq_org != check_orig:
+                with open(os.path.join(self.path, self.file_orig), "w", encoding = "utf-8") as f:
+                    json.dump(datos, f)
 
-            with open(os.path.join(self.path, self.file_orig_check), "w", encoding = "utf-8") as f:
-                f.write(check_orig)
+                with open(os.path.join(self.path, self.file_orig_check), "w", encoding = "utf-8") as f:
+                    f.write(check_orig)
 
             self.giter("push")
             if cheq_dest != "vacio" and hash_ureg == cheq_dest:
@@ -127,16 +128,16 @@ class Datos:
                 firmas_leidas_tx = self.lea_utl_hash(cheq_dest)
                 firmas_leidas = json.loads(firmas_leidas_tx)
                 sel_pass = 0
-                querys = ["""INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(firmas), check_orig, hash_ureg)]
+                querys = ["""INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ('{}', '{}', '{}')""".format(json.dumps(firmas), check_orig, hash_ureg)]
                 for fir in firmas_leidas:
-                    second_query = """UPDATE Actzl SET pasar={} WHERE firma = {}""".format(sel_pass, fir)
+                    second_query = """UPDATE Actzl SET pasar={} WHERE firma = '{}'""".format(sel_pass, fir)
                     querys.append(second_query)
-                terc_query = """UPDATE cade_bloqs SET confirmado={} WHERE hash_bloq={}""".format(sel_pass, cheq_dest)
+                terc_query = """UPDATE cade_bloqs SET confirmado={} WHERE hash_bloq='{}'""".format(sel_pass, cheq_dest)
                 querys.append(terc_query)
                 logger.debug("{} ".format(self.actualizar(querys)))
             elif hash_ureg == "vacio":
-                querys = ["""INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ({}, {}, {})""".format(json.dumps(firmas), check_orig, hash_ureg)]
-                logger.debug("{} ".format(self.actualizar(querys)))
+                querys = ["""INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ('{}', '{}', '{}')""".format(json.dumps(firmas), check_orig, hash_ureg)]
+                logger.debug(" {} ".format(self.actualizar(querys)))
 
     def calcquerys(self, dt_query):
         instrucions = {
@@ -204,7 +205,7 @@ class Datos:
                 datax = registro["instruccion"]
                 dt_query = json.loads(datax.replace("u00", "\\u00"))
                 fireg, querys = self.calcquerys(dt_query)
-                firmas.append[registro['firma']]
+                firmas.append(registro['firma'])
 
                 if registro["firma"] == fireg and not self.consulta_existe(registro["firma"]):
                     intru = registro['instruccion'].replace("'", "*")
@@ -218,7 +219,7 @@ class Datos:
                     query = """UPDATE Actzl set pasar=0 WHERE firma='{}'""".format(fireg)
                     logger.debug("{} ".format(self.actualizar([query])))
 
-            second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant, confirmado) values ({}, {}, {})""".format(json.dumps(firmas), checkorg, self.lea_utl_hash(), 0)
+            second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant, confirmado) values ('{}', '{}', '{}', '{}')""".format(json.dumps(firmas), checkorg, self.lea_utl_hash(), 0)
             logger.debug("{} ".format(self.actualizar([second_query])))
 
             with open(os.path.join(self.path, self.chek_dest), "w", encoding = "utf-8") as f:
@@ -226,7 +227,8 @@ class Datos:
 
             self.giter("push")
             try:
-                os.system(os.path.join(self.path_work, "actlz.sh"))
+                print("hola")
+                #os.system(os.path.join(self.path_work, "actlz.sh"))
             except:
                 pass
 
