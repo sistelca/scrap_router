@@ -71,8 +71,7 @@ class Datos:
         try:
             with open(file, encoding = "utf-8") as f:
                 return f.readline()
-        except Exception as e:
-            logger.exception(e)
+        except:
             return "vacio"
 
     def lea_utl_hash(self, blq=None): # selecciona ultimo registro por fecha de cadena de bloques
@@ -83,8 +82,7 @@ class Datos:
         self.cursor.execute(first_query)
         try:
             hash_ureg = self.cursor.fetchone()[0]
-        except Exception as e:
-            logger.exception(e)
+        except:
             hash_ureg = "vacio"
         return hash_ureg
 
@@ -97,7 +95,8 @@ class Datos:
         cheq_org  = self.leeshas(os.path.join(self.path, self.file_orig_check))
         cheq_dest = self.leeshas(os.path.join(self.path, self.file_dest_check))
 
-        confir_query = """select confirmado from cade_bloqs where hash_bloq=={}""".format(cheq_dest)
+        confir_query = """select confirmado from cade_bloqs where hash_bloq=={}"""
+        confir_query = confir_query.format(cheq_dest)
         self.cursor.execute(confir_query)
         try:
             confir = self.cursor.fetchone()[0]
@@ -109,11 +108,14 @@ class Datos:
             firmas_leidas_tx = self.lea_utl_hash(cheq_dest)
             firmas_leidas = json.loads(firmas_leidas_tx)
             sel_pass = 0
+            querys = []
 
             for fir in firmas_leidas:
-                second_query = """UPDATE Actzl SET pasar={} WHERE firma = '{}'""".format(sel_pass, fir)
+                second_query = """UPDATE Actzl SET pasar={} WHERE firma = '{}'"""
+                second_query = second_query.format(sel_pass, fir)
                 querys.append(second_query)
-            terc_query = """UPDATE cade_bloqs SET confirmado={} WHERE hash_bloq='{}'""".format(sel_pass, cheq_dest)
+            terc_query = """UPDATE cade_bloqs SET confirmado={} WHERE hash_bloq='{}'"""
+            terc_query = terc_query.format(sel_pass, cheq_dest)
             querys.append(terc_query)
             logger.debug("{} ".format(self.actualizar(querys)))
 
@@ -140,17 +142,17 @@ class Datos:
             orig = json.dumps(datos)
             check_orig = hashlib.sha1(orig.encode("utf-8")).hexdigest()
 
-            if cheq_org != check_orig:
-                with open(os.path.join(self.path, self.file_orig), "w", encoding = "utf-8") as f:
-                    json.dump(datos, f)
+            with open(os.path.join(self.path, self.file_orig), "w", encoding = "utf-8") as f:
+                json.dump(datos, f)
 
-                with open(os.path.join(self.path, self.file_orig_check), "w", encoding = "utf-8") as f:
-                    f.write(check_orig)
+            with open(os.path.join(self.path, self.file_orig_check), "w", encoding = "utf-8") as f:
+                f.write(check_orig)
 
             self.giter("push")
 
-            querys = ["""INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ('{}', '{}', '{}')""".format(json.dumps(firmas), check_orig, hash_ureg)]
-            logger.debug(" {} ".format(self.actualizar(querys)))
+            query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ('{}', '{}', '{}')"""
+            query = query.format(json.dumps(firmas), check_orig, hash_ureg)
+            logger.debug(" {} ".format(self.actualizar([query])))
 
     def calcquerys(self, dt_query):
         instrucions = {
@@ -232,7 +234,8 @@ class Datos:
                     query = """UPDATE Actzl set pasar=0 WHERE firma='{}'""".format(fireg)
                     logger.debug("{} ".format(self.actualizar([query])))
 
-            second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant, confirmado) values ('{}', '{}', '{}', '{}')""".format(json.dumps(firmas), checkorg, self.lea_utl_hash(), 0)
+            second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant, confirmado) values ('{}', '{}', '{}', '{}')"""
+            second_query = second_query.format(json.dumps(firmas), checkorg, self.lea_utl_hash(), 0)
             logger.debug("{} ".format(self.actualizar([second_query])))
 
             with open(os.path.join(self.path, self.chek_dest), "w", encoding = "utf-8") as f:
