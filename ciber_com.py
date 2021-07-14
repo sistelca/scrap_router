@@ -86,40 +86,31 @@ class Datos:
             hash_ureg = "vacio"
         return hash_ureg
 
-    def enviar(self):
-        # que no se volvera a enviar
-        self.giter("pull")
-
-        hash_ureg = self.lea_utl_hash()
-
-        cheq_org  = self.leeshas(os.path.join(self.path, self.file_orig_check))
-        cheq_dest = self.leeshas(os.path.join(self.path, self.file_dest_check))
-
-        confir_query = """select confirmado from cade_bloqs where hash_bloq=={}"""
-        confir_query = confir_query.format(cheq_dest)
-        self.cursor.execute(confir_query)
-        try:
+    def confirmaBloq(self, cheq_dest):
+        if cheq_dest != "vacio":
+            confir_query = """select confirmado from cade_bloqs where hash_bloq=={}"""
+            confir_query = confir_query.format(cheq_dest)
+            self.cursor.execute(confir_query)
             confir = self.cursor.fetchone()[0]
-        except:
-            confir = 2
 
-        if cheq_dest != "vacio" and hash_ureg == cheq_dest and confir > 0:
-            # buscar cheq_dest en cade_bloqs y leer firmas
-            firmas_leidas_tx = self.lea_utl_hash(cheq_dest)
-            firmas_leidas = json.loads(firmas_leidas_tx)
-            sel_pass = 0
-            querys = []
+            if confir > 0:
+                # buscar cheq_dest en cade_bloqs y leer firmas
+                firmas_leidas_tx = self.lea_utl_hash(cheq_dest)
+                firmas_leidas = json.loads(firmas_leidas_tx)
+                sel_pass = 0
+                querys = []
 
-            for fir in firmas_leidas:
-                second_query = """UPDATE Actzl SET pasar={} WHERE firma = '{}'"""
-                second_query = second_query.format(sel_pass, fir)
-                querys.append(second_query)
-            terc_query = """UPDATE cade_bloqs SET confirmado={} WHERE hash_bloq='{}'"""
-            terc_query = terc_query.format(sel_pass, cheq_dest)
-            querys.append(terc_query)
-            logger.debug("{} ".format(self.actualizar(querys)))
-
-
+                for fir in firmas_leidas:
+                    second_query = """UPDATE Actzl SET pasar={} WHERE firma = '{}'"""
+                    second_query = second_query.format(sel_pass, fir)
+                    querys.append(second_query)
+                terc_query = """UPDATE cade_bloqs SET confirmado={} WHERE hash_bloq='{}'"""
+                terc_query = terc_query.format(sel_pass, cheq_dest)
+                querys.append(terc_query)
+                logger.debug("{} ".format(self.actualizar(querys)))
+        return "bloque confirmado"
+    
+    def cargar_envio():
         # que si se va a enviar
         query = """select * from Actzl where pasar > 0"""
         self.cursor.execute(query)
@@ -136,8 +127,20 @@ class Datos:
                 }
             )
             firmas.append(x[3])
+        return [datos, firmas]
+    
+    def enviar(self):
+        # que no se volvera a enviar
+        self.giter("pull")
 
-        if len(datos) > 0 and hash_ureg == cheq_dest:
+        cheq_org  = self.leeshas(os.path.join(self.path, self.file_orig_check))
+        cheq_dest = self.leeshas(os.path.join(self.path, self.file_dest_check))
+
+        confirmaBloq(cheq_dest)
+
+        datos, firmas = cargar_envio()
+
+        if len(datos) > 0:
 
             orig = json.dumps(datos)
             check_orig = hashlib.sha1(orig.encode("utf-8")).hexdigest()
@@ -150,9 +153,11 @@ class Datos:
 
             self.giter("push")
 
-            query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ('{}', '{}', '{}')"""
-            query = query.format(json.dumps(firmas), check_orig, hash_ureg)
-            logger.debug(" {} ".format(self.actualizar([query])))
+            query1 = """DELETE FROM cade_bloqs WHERE confirmado>{}""".format(0)
+            logger.debug(" {} ".format(self.actualizar([query1])))
+            query2 = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ('{}', '{}', '{}')"""
+            query2 = query2.format(json.dumps(firmas), check_orig, cheq_dest)
+            logger.debug(" {} ".format(self.actualizar([query2])))
 
     def calcquerys(self, dt_query):
         instrucions = {
@@ -235,7 +240,7 @@ class Datos:
                     logger.debug("{} ".format(self.actualizar([query])))
 
             second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant, confirmado) values ('{}', '{}', '{}', '{}')"""
-            second_query = second_query.format(json.dumps(firmas), checkorg, self.lea_utl_hash(), 0)
+            second_query = second_query.format(json.dumps(firmas), checkorg, checkdes, 0)
             logger.debug("{} ".format(self.actualizar([second_query])))
 
             with open(os.path.join(self.path, self.chek_dest), "w", encoding = "utf-8") as f:
