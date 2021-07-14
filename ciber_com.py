@@ -110,7 +110,7 @@ class Datos:
                 logger.debug("{} ".format(self.actualizar(querys)))
         return "bloque confirmado"
     
-    def cargar_envio():
+    def cargar_envio(self):
         # que si se va a enviar
         query = """select * from Actzl where pasar > 0"""
         self.cursor.execute(query)
@@ -136,9 +136,9 @@ class Datos:
         cheq_org  = self.leeshas(os.path.join(self.path, self.file_orig_check))
         cheq_dest = self.leeshas(os.path.join(self.path, self.file_dest_check))
 
-        confirmaBloq(cheq_dest)
+        self.confirmaBloq(cheq_dest)
 
-        datos, firmas = cargar_envio()
+        datos, firmas = self.cargar_envio()
 
         if len(datos) > 0:
 
