@@ -91,7 +91,10 @@ class Datos:
             confir_query = """select confirmado from cade_bloqs where hash_bloq=={}"""
             confir_query = confir_query.format(cheq_dest)
             self.cursor.execute(confir_query)
-            confir = self.cursor.fetchone()[0]
+            try:
+                confir = self.cursor.fetchone()[0]
+            except:
+                confir = 0
 
             if confir > 0:
                 # buscar cheq_dest en cade_bloqs y leer firmas
@@ -112,12 +115,17 @@ class Datos:
     
     def cargar_envio(self):
         # que si se va a enviar
-        query = """select * from Actzl where pasar > 0"""
-        self.cursor.execute(query)
-        result = self.cursor.fetchall()
-
         datos = []
         firmas = []
+
+        query = """select * from Actzl where pasar > 0"""
+        self.cursor.execute(query)
+
+        try:
+            result = self.cursor.fetchall()
+        except:
+            result = []
+
         for x in result:
             datos.append(
                 {
