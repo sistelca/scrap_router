@@ -144,7 +144,8 @@ class Datos:
         cheq_org  = self.leeshas(os.path.join(self.path, self.file_orig_check))
         cheq_dest = self.leeshas(os.path.join(self.path, self.file_dest_check))
 
-        self.confirmaBloq(cheq_dest)
+        if cheq_org == cheq_dest:
+            self.confirmaBloq(cheq_dest)
 
         datos, firmas = self.cargar_envio()
 
