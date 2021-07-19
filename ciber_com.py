@@ -78,7 +78,7 @@ class Datos:
         if blq==None:
             first_query = """select hash_bloq from cade_bloqs order by created_at desc limit 1"""
         else:
-            first_query = """select bloq from cade_bloqs where hash_bloq=={}""".format(blq)
+            first_query = """select bloq from cade_bloqs where hash_bloq='{}'""".format(blq)
         self.cursor.execute(first_query)
         try:
             hash_ureg = self.cursor.fetchone()[0]
@@ -88,7 +88,7 @@ class Datos:
 
     def confirmaBloq(self, cheq_dest):
         if cheq_dest != "vacio":
-            confir_query = """select confirmado from cade_bloqs where hash_bloq=={}"""
+            confir_query = """select confirmado from cade_bloqs where hash_bloq='{}'"""
             confir_query = confir_query.format(cheq_dest)
             self.cursor.execute(confir_query)
             try:
@@ -165,7 +165,7 @@ class Datos:
             query1 = """DELETE FROM cade_bloqs WHERE confirmado>{}""".format(0)
             logger.debug(" {} ".format(self.actualizar([query1])))
             query2 = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant) values ('{}', '{}', '{}')"""
-            query2 = query2.format(json.dumps(firmas), check_orig, cheq_dest)
+            query2 = query2.format(json.dumps(firmas), check_orig, self.lea_utl_hash())
             logger.debug(" {} ".format(self.actualizar([query2])))
 
     def calcquerys(self, dt_query):
@@ -249,7 +249,7 @@ class Datos:
                     logger.debug("{} ".format(self.actualizar([query])))
 
             second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant, confirmado) values ('{}', '{}', '{}', '{}')"""
-            second_query = second_query.format(json.dumps(firmas), checkorg, checkdes, 0)
+            second_query = second_query.format(json.dumps(firmas), checkorg, self.lea_utl_hash(), 0)
             logger.debug("{} ".format(self.actualizar([second_query])))
 
             with open(os.path.join(self.path, self.chek_dest), "w", encoding = "utf-8") as f:
