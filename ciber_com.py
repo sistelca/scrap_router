@@ -236,7 +236,7 @@ class Datos:
                 fireg, querys = self.calcquerys(dt_query)
                 firmas.append(registro['firma'])
 
-                if registro["firma"] == fireg and not self.consulta_existe(registro["firma"]):
+                if registro["firma"] == fireg: # and not self.consulta_existe(registro["firma"]):
                     intru = registro['instruccion'].replace("'", "*")
                     qact  = """INSERT INTO Actzl (reg_fecha, instruc, firma, pasar)"""
                     qact += """ VALUES ('{}', '{}', '{}', 0)""".format(registro['fecha'], intru,
@@ -244,11 +244,11 @@ class Datos:
                     querys.append(qact)
                     logger.debug("{} ".format(self.actualizar(querys)))
 
-                elif self.consulta_existe(registro['firma']):
-                    query = """UPDATE Actzl set pasar=0 WHERE firma='{}'""".format(fireg)
-                    logger.debug("{} ".format(self.actualizar([query])))
+                # elif self.consulta_existe(registro['firma']):
+                #     query = """UPDATE Actzl set pasar=0 WHERE firma='{}'""".format(fireg)
+                #     logger.debug("{} ".format(self.actualizar([query])))
 
-            second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant, confirmado) values ('{}', '{}', '{}', '{}')"""
+            second_query = """INSERT INTO cade_bloqs (bloq, hash_bloq, hash_blq_ant, confirmado) values ('{}', '{}', '{}', 0)"""
             second_query = second_query.format(json.dumps(firmas), checkorg, self.lea_utl_hash(), 0)
             logger.debug("{} ".format(self.actualizar([second_query])))
 
